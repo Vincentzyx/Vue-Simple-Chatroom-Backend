@@ -1,0 +1,2 @@
+class vException(Exception):
+    pass
