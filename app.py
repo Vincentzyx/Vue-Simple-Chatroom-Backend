@@ -1,12 +1,9 @@
 from flask import Flask
-from flask import g
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, send, emit
 from functools import wraps
 from Exceptions import vException
 import json
-import BVEncode
 from AppFunctions import AppFunctions
-import SqlHelper
 import Utils
 
 app = Flask(__name__)
@@ -40,11 +37,17 @@ def json_response(func):
 @app.route('/')
 @json_response
 def index():
+    print("test")
     raise vException(-10001, "Wrong usage.")
 
 
+@socketio.on("message")
+def handle_message(message):
+    sessio
+
+
 with app.test_request_context():
-    print(len(Utils.gen_str()))
+    print("Testing...")
 
 
 if __name__ == '__main__':
