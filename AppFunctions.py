@@ -76,24 +76,44 @@ class User:
         self.Name = name
 
 
-class AppFunctions:
+class API:
 
     @staticmethod
-    def createRoom() -> str:
+    def createRoom():
         room = Room()
         SqlHelper.execute(
             "INSERT INTO `roomlist`(`roomid`, `name`, `avatar`, `description`) VALUES ('%s','%s','%s','%s')"
             % (room.RoomId, room.Name, room.Avatar, room.Description))
-        return room.RoomId
+        return {
+            "roomid": room.RoomId,
+            "name": room.Name,
+            "avatar": room.Avatar,
+            "description": room.Description
+        }
 
     @staticmethod
     @param_sql_escape
     def deleteRoom(room: str):
         result = SqlHelper.execute(
-            "INSERT INTO `roomlist` WHERE `roomid` = '%s'"
+            "DELETE FROM `roomlist` WHERE `roomid` = '%s'"
             % room)
         if not result:
             raise vException(-10000, "删除失败！（聊天室不存在）")
+
+    @staticmethod
+    @param_sql_escape
+    def getRoomInfo(room: str):
+        result = SqlHelper.fetchOne("SELECT `roomid`, `name`, `avatar`, `description` FROM `roomlist` "
+                                    "WHERE `roomid` = '%s'" % room)
+        if result is not None:
+            return {
+                "roomid": result[0],
+                "name": result[1],
+                "avatar": result[2],
+                "desciption": result[3]
+            }
+        else:
+            return None
 
     @staticmethod
     @param_sql_escape
@@ -143,5 +163,12 @@ class AppFunctions:
 
     @staticmethod
     @param_sql_escape
-    def sendMsg(room: str, user: str):
-        pass
+    def sendMsg(room: str, user: str, msg: str) -> str:
+        mid = SqlHelper.execute("INSERT INTO `chat`(`user`, `room`, `msg`) VALUES ('%s','%s','%s')"
+                          % (user, room, msg), "insert")
+        return str(mid)
+
+    @staticmethod
+    @param_sql_escape
+    def userConnect(room: str, userid: str, username: str):
+        SqlHelper.execute()
