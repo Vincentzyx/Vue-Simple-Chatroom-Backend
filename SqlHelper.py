@@ -32,7 +32,7 @@ def insert(sql):
 def execute(sql, returnMode="bool"):
     if returnMode == "bool":
         try:
-            cursor = connect() # type: MySQLdb.cursors.Cursor
+            cursor = connect()  # type: MySQLdb.cursors.Cursor
             cursor.execute(sql)
             cursor.close()
             return True
