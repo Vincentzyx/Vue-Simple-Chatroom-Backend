@@ -115,6 +115,13 @@ def handle_message(message):
 @json_response
 def create_room():
     roomInfo = API.createRoom()
+    if "roomid" in session:
+        leave_room(session["roomid"])
+        API.removeUser(session["roomid"], session["uid"])
+        emit("user_record", WrapInfo(0, "leave", {
+            "uid": Utils.md5_vsalt(session["uid"]),
+            "name": session["name"]
+        }), room=session["roomid"])
     roomId = roomInfo["roomid"]
     join_room(roomId)
     session["roomid"] = roomId
@@ -145,6 +152,7 @@ def join_chatroom(roomId, leavePrev):
         if leavePrev:
             if "roomid" in session and session["roomid"] != roomId:
                 leave_room(session["roomid"])
+                API.removeUser(session["roomid"], session["uid"])
                 emit("user_record", WrapInfo(0, "leave", {
                     "uid": Utils.md5_vsalt(session["uid"]),
                     "name": session["name"]
@@ -166,7 +174,6 @@ def join_chatroom(roomId, leavePrev):
 @socketio.on("leave_room")
 @json_response
 def leave_chatroom():
-    print("leave", session["roomid"])
     if "roomid" in session:
         result = API.removeUser(session["roomid"], session["uid"])
         if result:
