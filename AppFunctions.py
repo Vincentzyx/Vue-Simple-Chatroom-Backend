@@ -7,7 +7,7 @@ import SqlHelper
 from Exceptions import vException
 from flask_socketio import SocketIO
 
-MSG_PER_PAGE = 20
+MSG_PER_PAGE = 21
 
 
 def param_sql_escape(func):
@@ -154,18 +154,24 @@ class API:
     @staticmethod
     @param_sql_escape
     def recordUser(room: str, uid: str, name: str):
-        result = SqlHelper.execute("INSERT INTO `user`(`id`, `name`, `room`) VALUES ('%s','%s','%s')"
-                                   % (uid, name, room))
-        if result:
-            return True
+        prevRecord = SqlHelper.fetchOne("SELECT `id`,`name`,`room` FROM `user` WHERE `id`='%s' AND `room`='%s'"
+                                        % (uid, room))
+        if prevRecord is not None:
+            if prevRecord[1] != name:
+                result = SqlHelper.execute("UPDATE `user` SET `name`='%s' WHERE `room`='%s' AND `id`='%s'"
+                                           % (name, room, uid))
+                return result
+        else:
+            result = SqlHelper.execute("INSERT INTO `user`(`id`, `name`, `room`) VALUES ('%s','%s','%s')"
+                                       % (uid, name, room))
+            return result
 
     @staticmethod
     @param_sql_escape
     def removeUser(room: str, uid: str):
         result = SqlHelper.execute("DELETE FROM `user` WHERE `room`='%s' AND `id`='%s'"
-                                   % (room, uid), "insert")
-        if result:
-            return True
+                                   % (room, uid))
+        return result
 
     @staticmethod
     @param_sql_escape
@@ -174,14 +180,14 @@ class API:
         userList = []
         for u in result:
             userList.append({
-                "uid": u[0],
+                "uid": Utils.md5_vsalt(u[0]),
                 "name": u[1]
             })
         return userList
 
     @staticmethod
     @param_sql_escape
-    def getChatHistory(room: str, page=1, frommsg=-1) -> List:
+    def getChatHistory(room: str, page=1, frommsg=-1):
         sql = "SELECT `id`, `user`, `name`, `msg`, `time` FROM `chat` WHERE `room` = '%s' " % room
         if frommsg is not int:
             frommsg = int(frommsg)
@@ -192,6 +198,7 @@ class API:
         sql += "ORDER BY id DESC LIMIT %d,%d " % ((page - 1) * MSG_PER_PAGE, MSG_PER_PAGE)
         result = SqlHelper.fetchAll(sql)
         msgList = []
+        done = False
         for rawMsg in result:
             msgList.append({
                 "id": rawMsg[0],
@@ -201,7 +208,14 @@ class API:
                 "time": rawMsg[4].strftime('%Y-%m-%dT%H:%M:%SZ')
             })
         msgList.reverse()
-        return msgList
+        if len(msgList) < MSG_PER_PAGE:
+            done = True
+        else:
+            msgList.pop(0)
+        return {
+            "list": msgList,
+            "done": done
+        }
 
     @staticmethod
     @param_sql_escape

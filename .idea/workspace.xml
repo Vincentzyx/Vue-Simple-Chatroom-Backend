@@ -4,7 +4,6 @@
     <list default="true" id="5409801f-439d-463e-9cf3-cbdf3f34b1c0" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AppFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/AppFunctions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SqlHelper.py" beforeDir="false" afterPath="$PROJECT_DIR$/SqlHelper.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -94,7 +93,8 @@
       <workItem from="1587993226287" duration="1824000" />
       <workItem from="1587995182781" duration="128000" />
       <workItem from="1587995444342" duration="17510000" />
-      <workItem from="1588036920258" duration="30637000" />
+      <workItem from="1588036920258" duration="30719000" />
+      <workItem from="1588211350138" duration="17449000" />
     </task>
     <servers />
   </component>
@@ -115,6 +115,6 @@
     </option>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/chatroom$chatroom.coverage" NAME="chatroom Coverage Results" MODIFIED="1588188162323" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/chatroom$chatroom.coverage" NAME="chatroom Coverage Results" MODIFIED="1588241343815" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
   </component>
 </project>

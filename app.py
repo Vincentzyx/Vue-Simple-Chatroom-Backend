@@ -75,13 +75,19 @@ def handle_connect():
 @socketio.on('disconnect')
 def handle_disconnect():
     if "roomid" in session:
-        API.removeUser(session["roomid"], session["uid"])
+        uidMd5 = Utils.md5_vsalt(session["uid"])
+        print(uidMd5, "disconnected.")
+        result = API.removeUser(session["roomid"], session["uid"])
+        if result:
+            emit("user_record", WrapInfo(0, "leave", {
+                "uid": uidMd5,
+                "name": session["name"]
+            }), room=session["roomid"])
 
 
 @app.route('/')
 @json_response
 def index():
-    print("test")
     raise vException(-10001, "Wrong usage.")
 
 
@@ -101,7 +107,7 @@ def handle_message(message):
         "msg": message,
         "time": datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
     }
-    emit("message", WrapInfo(0, "发送成功", msg), json=True, broadcast=True)
+    emit("message", WrapInfo(0, "消息", msg), json=True, room=roomId)
     return True
 
 
@@ -116,14 +122,42 @@ def create_room():
     return roomInfo
 
 
-@socketio.on("join_room")
+@socketio.on("delete_room")
 @json_response
-def join_chatroom(roomId):
+def delete_room(roomId):
     roomInfo = API.getRoomInfo(roomId)
     if roomInfo is not None:
+        creator = API.getFirstMember(roomId)
+        if creator["user"] == session["uid"]:
+            API.deleteRoom(roomId)
+            return True
+        else:
+            raise vException(-2, "你不是群主！")
+    else:
+        raise vException(-1, "房间不存在！")
+
+
+@socketio.on("join_room")
+@json_response
+def join_chatroom(roomId, leavePrev):
+    roomInfo = API.getRoomInfo(roomId)
+    if roomInfo is not None:
+        if leavePrev:
+            if "roomid" in session and session["roomid"] != roomId:
+                leave_room(session["roomid"])
+                emit("user_record", WrapInfo(0, "leave", {
+                    "uid": Utils.md5_vsalt(session["uid"]),
+                    "name": session["name"]
+                }), room=session["roomid"])
         join_room(roomId)
         session["roomid"] = roomId
         API.recordUser(roomId, session["uid"], session["name"])
+        print("record", roomId, session["uid"], session["name"])
+        emit("user_record", WrapInfo(0, "join", {
+            "uid": Utils.md5_vsalt(session["uid"]),
+            "name": session["name"]
+        }), room=roomId)
+        print("join")
         return roomInfo
     else:
         raise vException(-1, "房间不存在")
@@ -132,8 +166,16 @@ def join_chatroom(roomId):
 @socketio.on("leave_room")
 @json_response
 def leave_chatroom():
+    print("leave", session["roomid"])
     if "roomid" in session:
-        API.removeUser(session["roomid"], session["uid"])
+        result = API.removeUser(session["roomid"], session["uid"])
+        if result:
+            emit("user_record", WrapInfo(0, "leave", {
+                "uid": Utils.md5_vsalt(session["uid"]),
+                "name": session["name"]
+            }), room=session["roomid"])
+            print("leave")
+            return True
 
 
 @socketio.on("get_online")
@@ -141,6 +183,9 @@ def leave_chatroom():
 def get_online():
     if "roomid" in session:
         onlineList = API.getOnlineList(session["roomid"])
+        print(session["roomid"])
+        print("getonline")
+        print(onlineList)
         return onlineList
 
 
@@ -150,7 +195,7 @@ def msg_history(roomId, page, frommsg):
     roomInfo = API.getRoomInfo(roomId)
     if roomInfo is not None:
         msgList = API.getChatHistory(roomId, page, frommsg)
-        for msg in msgList:
+        for msg in msgList["list"]:
             msg["user"] = Utils.md5_vsalt(msg["user"])
         return msgList
     else:
@@ -206,9 +251,39 @@ def upload_avatar():
             raise vException(-3, "File format is not supported.")
 
 
+def allowed_file2(filename):
+    ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'docx', 'doc', 'pptx', 'ppt', 'xls', 'xlsx'}
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@app.route('/attachment-upload', methods=['POST'])
+@json_response
+def upload_attachment():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            raise vException(-1, "File not found")
+        file = request.files['file']
+        if file.filename == '':
+            raise vException(-2, "Filename is empty.")
+        if file and allowed_file2(file.filename):
+            ext = file.filename.split('.')[-1]
+            random_filename = Utils.gen_str()
+            file_name = random_filename + "." + ext
+            file.save(os.path.join("static", "attachments", file_name))
+            return "/attachments/" + file_name
+        else:
+            raise vException(-3, "File format is not supported.")
+
+
 @app.route("/avatar/<path:path>")
 def send_avatar(path):
     return send_from_directory("static/avatar", path)
+
+
+@app.route("/attachments/<path:path>")
+def send_attachments(path):
+    return send_from_directory("static/attachments", path)
 
 
 with app.test_request_context():
