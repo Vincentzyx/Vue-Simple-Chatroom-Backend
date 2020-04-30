@@ -10,7 +10,7 @@ import os
 
 app = Flask(__name__)
 app.secret_key = ' A\xcd!x\xa6a\xffS\xcc\xc9\xdf?\x15\xd7\xbb\xdf\x0b\x9f\x1cy\xdcb\x8b'
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 
 def json_response(func):
@@ -160,12 +160,10 @@ def join_chatroom(roomId, leavePrev):
         join_room(roomId)
         session["roomid"] = roomId
         API.recordUser(roomId, session["uid"], session["name"])
-        print("record", roomId, session["uid"], session["name"])
         emit("user_record", WrapInfo(0, "join", {
             "uid": Utils.md5_vsalt(session["uid"]),
             "name": session["name"]
         }), room=roomId)
-        print("join")
         return roomInfo
     else:
         raise vException(-1, "房间不存在")
@@ -181,7 +179,6 @@ def leave_chatroom():
                 "uid": Utils.md5_vsalt(session["uid"]),
                 "name": session["name"]
             }), room=session["roomid"])
-            print("leave")
             return True
 
 
@@ -190,9 +187,6 @@ def leave_chatroom():
 def get_online():
     if "roomid" in session:
         onlineList = API.getOnlineList(session["roomid"])
-        print(session["roomid"])
-        print("getonline")
-        print(onlineList)
         return onlineList
 
 
@@ -294,7 +288,7 @@ def send_attachments(path):
 
 
 with app.test_request_context():
-    print("Testing...")
+    pass
 
 if __name__ == '__main__':
     socketio.run(app)

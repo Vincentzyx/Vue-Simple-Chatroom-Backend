@@ -32,10 +32,10 @@ def param_sql_escape(func):
 
 
 class Room:
-    RoomId: str
-    Name: str
-    Avatar: str
-    Description: str
+    RoomId = ""
+    Name = ""
+    Avatar = ""
+    Description = ""
 
     def __init__(self, jsonStr=""):
         if len(jsonStr) > 0:
@@ -60,9 +60,9 @@ class Room:
 
 
 class Msg:
-    Id: str
-    User: str
-    Content: str
+    Id = ""
+    User = ""
+    Content = ""
 
     def __init__(self, id: str, user: str, content: str):
         self.Id = id
@@ -71,8 +71,8 @@ class Msg:
 
 
 class User:
-    Id: str
-    Name: str
+    Id = ""
+    Name = ""
 
     def __init__(self, id: str = "", name: str = ""):
         if id == "":
