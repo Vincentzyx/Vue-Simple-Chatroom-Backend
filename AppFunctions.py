@@ -4,6 +4,7 @@ import BVEncode
 import json
 import Utils
 import SqlHelper
+from datetime import datetime
 from Exceptions import vException
 from flask_socketio import SocketIO
 
@@ -232,8 +233,8 @@ class API:
     @staticmethod
     @param_sql_escape
     def sendMsg(room: str, user: str, name: str, msg: str) -> str:
-        mid = SqlHelper.execute("INSERT INTO `chat`(`user`, `name`, `room`, `msg`) VALUES ('%s','%s','%s','%s')"
-                          % (user, name, room, msg), "insert")
+        mid = SqlHelper.execute("INSERT INTO `chat`(`user`, `name`, `room`, `msg`,`time`) VALUES ('%s','%s','%s','%s','%s')"
+                                % (user, name, room, msg, datetime.now().strftime('%Y-%m-%d %H:%M:%S')), "insert")
         return str(mid)
 
     @staticmethod
